@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>еАкциз Toolkit — прототип для Campari Ukraine</title>
+<meta name="description" content="Прототип інтерфейсу локального десктопного застосунку для підготовки файлів обміну з системою еАкциз. Початкове бачення рішення для Campari Ukraine.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#20343d">
+<meta property="og:type" content="website">
+<meta property="og:title" content="еАкциз Toolkit — прототип інтерфейсу">
+<meta property="og:description" content="Початкове бачення інтерфейсу. Після узгодження деталей дизайн буде приведено у відповідність до брендбуку Campari Group.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2320343d'/%3E%3Crect x='7' y='9' width='18' height='14' rx='2' fill='none' stroke='%235fbfa6' stroke-width='2'/%3E%3Cpath d='M11 16h10M11 19h6' stroke='%235fbfa6' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --chrome:#20343d; --chrome2:#2a444f; --chrome-line:#375764; --chrome-ink:#dce7ec; --chrome-ink-dim:#9db4bf;
+  --canvas:#f0f3f4; --surface:#ffffff; --surface2:#f7f9fa;
+  --ink:#12212a; --muted:#5b6f7a; --line:#ced8dd; --line-soft:#e5ebee;
+  --go:#0b6b57; --go-soft:#e6f2ee; --go-line:#a9ccc1;
+  --warn:#8a5900; --warn-soft:#fcf2de; --warn-line:#e2c893;
+  --err:#a92318; --err-soft:#fbeae8; --err-line:#e8b5af;
+  --danger:#7a1e2b; --danger-soft:#f8e9eb;
+  --p1:#1c5a86; --p1-soft:#e7f0f7; --p1-line:#aecbe1;
+  --p2:#6b4aa8; --p2-soft:#f0ebf9; --p2-line:#c9b9e8;
+  --sans:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0; background:var(--canvas); color:var(--ink); font-family:var(--sans); font-size:14px; line-height:1.45; -webkit-font-smoothing:antialiased}
+button{font:inherit; color:inherit; cursor:pointer}
+:focus-visible{outline:2px solid var(--go); outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+
+.page{max-width:1280px; margin:0 auto; padding:18px 16px 40px}
+.app{background:var(--surface); border:1px solid var(--line); border-radius:6px; overflow:hidden;
+  box-shadow:0 1px 2px rgba(10,30,40,.07),0 12px 32px -18px rgba(10,30,40,.42);
+  display:flex; flex-direction:column; height:clamp(620px,84vh,940px)}
+.titlebar{background:var(--chrome); color:var(--chrome-ink); display:flex; align-items:center; gap:12px;
+  padding:0 12px; height:38px; flex:none; border-bottom:1px solid var(--chrome-line)}
+.dots{display:flex; gap:6px}
+.dots i{width:10px; height:10px; border-radius:50%; background:var(--chrome-line); display:block}
+.titlebar .name{font-size:12.5px; font-weight:500}
+.titlebar .name span{color:var(--chrome-ink-dim); font-weight:400}
+.titlebar .spacer{flex:1}
+.body{display:flex; flex:1; min-height:0}
+.side{width:224px; flex:none; background:var(--chrome2); border-right:1px solid var(--chrome-line); overflow-y:auto; padding:10px 0 14px}
+.side .grp{padding:12px 14px 5px; font-size:10.5px; color:var(--chrome-ink-dim); letter-spacing:.06em; font-weight:600}
+.side button{display:flex; width:100%; align-items:center; gap:9px; text-align:left; background:none; border:0;
+  padding:7px 14px; color:var(--chrome-ink); font-size:13px; border-left:2px solid transparent}
+.side button:hover{background:rgba(255,255,255,.06)}
+.side button.active{background:rgba(255,255,255,.11); border-left-color:#5fbfa6; font-weight:500; color:#fff}
+.side button .ic{width:15px; text-align:center; font-size:12px; color:var(--chrome-ink-dim); flex:none}
+.side button.active .ic{color:#5fbfa6}
+.side button.danger.active{border-left-color:#d4909c}
+.side button.danger.active .ic{color:#d4909c}
+
+.main{flex:1; min-width:0; display:flex; flex-direction:column; background:var(--canvas)}
+.bar{flex:none; background:var(--surface); border-bottom:1px solid var(--line); padding:11px 18px;
+  display:flex; align-items:center; gap:14px; flex-wrap:wrap}
+.bar h2{margin:0; font-size:15px; font-weight:600; letter-spacing:-.01em}
+.bar .crumb{font-size:11.5px; color:var(--muted); margin:0 0 2px}
+.bar .actions{margin-left:auto; display:flex; gap:8px}
+.view{flex:1; overflow-y:auto; padding:18px}
+.screen{display:none}
+.screen.on{display:block}
+.lead{margin:0 0 14px; color:var(--muted); font-size:12.5px; max-width:78ch}
+
+.btn{border:1px solid var(--line); background:var(--surface); border-radius:4px; padding:6px 12px; font-size:12.5px; font-weight:500}
+.btn:hover{background:var(--surface2)}
+.btn.go{background:var(--go); border-color:var(--go); color:#fff}
+.btn.go:hover{filter:brightness(1.08)}
+.btn.dgr{background:var(--danger); border-color:var(--danger); color:#fff}
+.btn.sm{padding:3px 8px; font-size:11.5px}
+.btn:disabled{opacity:.45; cursor:default}
+.field{display:flex; flex-direction:column; gap:4px}
+.field label{font-size:11.5px; color:var(--muted); font-weight:500}
+.inp{border:1px solid var(--line); background:var(--surface); border-radius:4px; padding:6px 9px; font-family:inherit; font-size:13px; color:var(--ink); width:100%}
+.inp:disabled{background:var(--surface2); color:var(--muted)}
+
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:5px}
+.panel>header{padding:9px 13px; border-bottom:1px solid var(--line-soft); display:flex; align-items:center; gap:9px; font-size:12.5px; font-weight:600}
+.panel>header .r{margin-left:auto; font-weight:400; color:var(--muted); font-size:11.5px}
+.panel .pad{padding:13px}
+.cols{display:grid; gap:16px}
+.c-2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.c-32{grid-template-columns:minmax(0,1.85fr) minmax(0,1fr)}
+@media (max-width:900px){.cols{grid-template-columns:1fr!important}}
+
+table{width:100%; border-collapse:collapse; font-size:12.5px}
+th{text-align:left; font-weight:600; font-size:11px; color:var(--muted); padding:7px 10px; border-bottom:1px solid var(--line); background:var(--surface2); position:sticky; top:0; white-space:nowrap}
+td{padding:7px 10px; border-bottom:1px solid var(--line-soft); vertical-align:top}
+tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--surface2)}
+td.mono,.mono{font-family:var(--mono); font-size:11.5px; letter-spacing:-.01em}
+td.num{text-align:right; font-variant-numeric:tabular-nums}
+.tw{overflow:auto}
+tr.bad td{background:var(--err-soft)}
+tr.wrn td{background:var(--warn-soft)}
+
+.chip{display:inline-flex; align-items:center; gap:5px; border-radius:3px; padding:1.5px 7px; font-size:11px; font-weight:500; border:1px solid transparent; white-space:nowrap}
+.chip.ok{background:var(--go-soft); color:var(--go); border-color:var(--go-line)}
+.chip.wr{background:var(--warn-soft); color:var(--warn); border-color:var(--warn-line)}
+.chip.er{background:var(--err-soft); color:var(--err); border-color:var(--err-line)}
+.chip.nt{background:var(--surface2); color:var(--muted); border-color:var(--line)}
+.dot{width:7px; height:7px; border-radius:50%; display:inline-block; flex:none}
+.dot.ok{background:var(--go)} .dot.wr{background:var(--warn)} .dot.er{background:var(--err)}
+
+.drop{border:1px dashed var(--line); border-radius:5px; background:var(--surface2); padding:14px; display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+.drop .fi{font-family:var(--mono); font-size:12px}
+.drop .meta{color:var(--muted); font-size:11.5px; margin-top:2px}
+.drop .right{margin-left:auto; display:flex; gap:7px; align-items:center}
+
+.kv{display:grid; grid-template-columns:auto 1fr; gap:6px 14px; font-size:12.5px; align-items:baseline}
+.kv dt{color:var(--muted); font-size:11.5px}
+.kv dd{margin:0; font-weight:500}
+
+.log{border:1px solid var(--line); border-radius:5px; overflow:hidden; background:var(--surface)}
+.log .head{display:flex; align-items:center; gap:9px; padding:9px 13px; background:var(--surface2); border-bottom:1px solid var(--line-soft); font-size:12.5px; font-weight:600}
+.log .row{display:flex; gap:10px; align-items:flex-start; padding:9px 13px; border-bottom:1px solid var(--line-soft)}
+.log .row:last-child{border-bottom:0}
+.log .row .t{flex:1; min-width:0; font-size:12.5px}
+.log .row .t b{display:block; font-weight:600; margin-bottom:2px}
+.log .row .t span{color:var(--muted); font-size:12px}
+.log .row .a{flex:none; display:flex; gap:6px}
+.sums{display:flex; gap:9px; flex-wrap:wrap; padding:11px 13px; border-bottom:1px solid var(--line-soft); background:var(--surface)}
+.sum{border:1px solid var(--line); border-radius:4px; padding:7px 12px; min-width:104px}
+.sum b{display:block; font-size:18px; font-weight:600; font-variant-numeric:tabular-nums; line-height:1.2}
+.sum small{color:var(--muted); font-size:11px}
+.sum.er{border-color:var(--err-line); background:var(--err-soft)} .sum.er b{color:var(--err)}
+.sum.wr{border-color:var(--warn-line); background:var(--warn-soft)} .sum.wr b{color:var(--warn)}
+.sum.ok{border-color:var(--go-line); background:var(--go-soft)} .sum.ok b{color:var(--go)}
+
+.rcards{display:grid; grid-template-columns:repeat(auto-fit,minmax(178px,1fr)); gap:10px}
+.rcard{border:1px solid var(--line); border-radius:5px; background:var(--surface); padding:11px 13px; text-align:left; display:flex; flex-direction:column; gap:3px}
+.rcard b{font-size:13px; font-weight:600}
+.rcard small{color:var(--muted); font-size:11.5px}
+.rcard.sel{border-color:var(--danger); background:var(--danger-soft); box-shadow:inset 0 0 0 1px var(--danger)}
+
+.tabs{display:flex; gap:2px; border-bottom:1px solid var(--line); margin-bottom:13px}
+.tabs button{background:none; border:0; border-bottom:2px solid transparent; padding:7px 13px; font-size:12.5px; color:var(--muted)}
+.tabs button.on{border-bottom-color:var(--go); color:var(--ink); font-weight:600}
+
+.outfile{display:flex; align-items:center; gap:11px; background:var(--go-soft); border:1px solid var(--go-line); border-radius:5px; padding:11px 13px; flex-wrap:wrap}
+.outfile .tick{width:22px; height:22px; border-radius:50%; background:var(--go); color:#fff; display:grid; place-items:center; font-size:12px; flex:none}
+.outfile .nm{font-family:var(--mono); font-size:12px}
+.outfile .pa{color:var(--muted); font-size:11.5px; margin-top:1px}
+
+.statusbar{flex:none; background:var(--chrome); color:var(--chrome-ink-dim); border-top:1px solid var(--chrome-line);
+  padding:0 14px; height:26px; display:flex; align-items:center; gap:16px; font-size:11px}
+.statusbar .mono{font-size:11px; color:var(--chrome-ink)}
+.statusbar .right{margin-left:auto}
+
+@media (max-width:760px){
+  .app{height:auto}
+  .body{flex-direction:column}
+  .side{width:100%; display:flex; overflow-x:auto; padding:6px; gap:4px}
+  .side .grp{display:none}
+  .side button{width:auto; white-space:nowrap; border-left:0; border-bottom:2px solid transparent; padding:6px 10px}
+  .side button.active{border-left:0; border-bottom-color:#5fbfa6}
+  .view{overflow:visible}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="app" id="app">
+
+  <div class="titlebar">
+    <div class="dots"><i></i><i></i><i></i></div>
+    <div class="name">еАкциз Toolkit <span>— Campari Ukraine</span></div>
+    <div class="spacer"></div>
+  </div>
+
+  <div class="body">
+
+    <nav class="side">
+      <div class="grp">Довідник</div>
+      <button data-go="cat" class="active"><span class="ic">▤</span> Довідник товарів</button>
+      <div class="grp">Формування УІ та УГІ</div>
+      <button data-go="ui"><span class="ic">▸</span> Формування УІ</button>
+      <button data-go="ugi"><span class="ic">▸</span> Внесення УГІ</button>
+      <div class="grp">Марки</div>
+      <button data-go="em"><span class="ic">▸</span> Активація ЕМ</button>
+      <button data-go="move"><span class="ic">▸</span> Особливі випадки</button>
+      <div class="grp">Списання</div>
+      <button data-go="deact" class="danger"><span class="ic">⊘</span> Деактивація</button>
+    </nav>
+
+    <div class="main">
+      <div class="bar">
+        <div>
+          <div class="crumb" id="crumb">Довідник</div>
+          <h2 id="title">Довідник товарів</h2>
+        </div>
+        <div class="actions" id="acts"></div>
+      </div>
+
+      <div class="view">
+
+        <!-- ============ CATALOG ============ -->
+        <section class="screen on" id="s-cat">
+          <div class="drop" style="margin-bottom:14px">
+            <div>
+              <div class="fi">1C_export_22092026.xlsx</div>
+              <div class="meta">файл вивантажено з 1С вручну · завантажено 22.09.2026, 10:30 · 44 позиції · 1 запис неповний</div>
+            </div>
+            <div class="right">
+              <button class="btn sm">Обрати інший файл</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <header>
+              Асортимент
+              <span class="r">44 позиції · збережено локально, оновлюється завантаженням файлу</span>
+            </header>
+            <div class="pad" style="display:flex; gap:9px; align-items:center; flex-wrap:wrap">
+              <span class="chip er">Неповні записи · 1</span>
+              <span style="margin-left:auto"></span>
+              <button class="btn sm">Додати товар</button>
+            </div>
+            <div class="tw" style="max-height:400px">
+              <table>
+                <thead><tr>
+                  <th>Коротка назва</th><th>Код</th><th>Назва для еАкцизу</th><th>Штрихкод</th><th>УКТ ЗЕД</th>
+                  <th class="num">Місткість</th><th class="num">Міцність</th><th>Країна</th><th class="num">Ставка</th><th>Стан</th><th></th>
+                </tr></thead>
+                <tbody>
+                  <tr><td>Campari 0,7L</td><td class="mono">100003</td><td>Настоянка гірка CAMPARI, 0,7 л</td><td class="mono">8000040001106</td><td class="mono">2208701000</td><td class="num">0,7</td><td class="num">25,0%</td><td>ITA</td><td class="num">133,31</td><td><span class="chip ok">повний</span></td><td><button class="btn sm">Змінити</button></td></tr>
+                  <tr><td>Campari 1L</td><td class="mono">100004</td><td>Настоянка гірка CAMPARI, 1 л</td><td class="mono">8000040000802</td><td class="mono">2208701000</td><td class="num">1,0</td><td class="num">25,0%</td><td>ITA</td><td class="num">133,31</td><td><span class="chip ok">повний</span></td><td><button class="btn sm">Змінити</button></td></tr>
+                  <tr><td>Aperol 0,7L</td><td class="mono">435160</td><td>Аперитив APEROL APERITIVO, 0,7 л</td><td class="mono">8002230000302</td><td class="mono">2208906900</td><td class="num">0,7</td><td class="num">11,0%</td><td>ITA</td><td class="num">133,31</td><td><span class="chip ok">повний</span></td><td><button class="btn sm">Змінити</button></td></tr>
+                  <tr><td>Aperol 1L</td><td class="mono">435162</td><td>Аперитив APEROL APERITIVO, 1 л</td><td class="mono">8002230000012</td><td class="mono">2208906900</td><td class="num">1,0</td><td class="num">11,0%</td><td>ITA</td><td class="num">133,31</td><td><span class="chip ok">повний</span></td><td><button class="btn sm">Змінити</button></td></tr>
+                  <tr class="bad"><td>Aperol RTS 3x0.2L</td><td class="mono" style="color:var(--err)">—</td><td style="color:var(--err)">не заповнено</td><td class="mono" style="color:var(--err)">—</td><td class="mono">2208906900</td><td class="num">0,2</td><td class="num">9,0%</td><td>ITA</td><td class="num">133,31</td><td><span class="chip er">3 поля</span></td><td><button class="btn sm">Заповнити</button></td></tr>
+                  <tr><td>Glen Grant 10 YO 0,7L</td><td class="mono">100010</td><td>Віскі 10-річної витримки Glen Grant 10 years</td><td class="mono">080432402979</td><td class="mono">2208303000</td><td class="num">0,7</td><td class="num">40,0%</td><td>GBR</td><td class="num">133,31</td><td><span class="chip ok">повний</span></td><td><button class="btn sm">Змінити</button></td></tr>
+                  <tr><td>Glen Grant 18 YO 0,7L</td><td class="mono">110017</td><td>Віскі 18-річної витримки Glen Grant 18 years</td><td class="mono">8000040630382</td><td class="mono">2208303000</td><td class="num">0,7</td><td class="num">43,0%</td><td>GBR</td><td class="num">133,31</td><td><span class="chip ok">повний</span></td><td><button class="btn sm">Змінити</button></td></tr>
+                  <tr><td>Espolon Blanco 0,75L</td><td class="mono">100015</td><td>Текіла ESPOLON BLANCO</td><td class="mono">721059707503</td><td class="mono">2208905400</td><td class="num">0,75</td><td class="num">40,0%</td><td>MEX</td><td class="num">133,31</td><td><span class="chip ok">повний</span></td><td><button class="btn sm">Змінити</button></td></tr>
+                  <tr><td>Wild Turkey 101 0,7L</td><td class="mono">100077</td><td>Віскі 101 WILD TURKEY</td><td class="mono">8000040500036</td><td class="mono">2208301100</td><td class="num">0,7</td><td class="num">50,5%</td><td>USA</td><td class="num">133,31</td><td><span class="chip ok">повний</span></td><td><button class="btn sm">Змінити</button></td></tr>
+                  <tr><td>Appleton Estate 12YO 0,7L</td><td class="mono">100091</td><td>Ром ямайський APPLETON ESTATE 12 years RARE BLEND</td><td class="mono">5024576191103</td><td class="mono">2208401100</td><td class="num">0,7</td><td class="num">43,0%</td><td>JAM</td><td class="num">133,31</td><td><span class="chip ok">повний</span></td><td><button class="btn sm">Змінити</button></td></tr>
+                  <tr><td>Grand Marnier 0,7L</td><td class="mono">100098</td><td>Лікер апельсиновий Grand Marnier CORDON ROUGE</td><td class="mono">3018300000245</td><td class="mono">2208701000</td><td class="num">0,7</td><td class="num">40,0%</td><td>FRA</td><td class="num">133,31</td><td><span class="chip ok">повний</span></td><td><button class="btn sm">Змінити</button></td></tr>
+                  <tr><td>Mondoro Prosecco</td><td class="mono">110035</td><td>Вино ігристе біле сухе, MONDORO PROSECCO без п/у 0,75</td><td class="mono">8004160227606</td><td class="mono">2204101500</td><td class="num">0,75</td><td class="num">11,0%</td><td>ITA</td><td class="num">12,23</td><td><span class="chip ok">повний</span></td><td><button class="btn sm">Змінити</button></td></tr>
+                  <tr><td>Riccadonna 0.75 L</td><td class="mono">436069</td><td>Вино ігристе біле сухе RICCADONNA FOR SPRITZ, 0.75 л</td><td class="mono">8000368083174</td><td class="mono">2204109800</td><td class="num">0,75</td><td class="num">11,5%</td><td>ITA</td><td class="num">12,23</td><td><span class="chip ok">повний</span></td><td><button class="btn sm">Змінити</button></td></tr>
+                  <tr><td>Courvoisier XO 0.7L</td><td class="mono">434917</td><td>Коньяк Courvoisier XO, 0,7 л</td><td class="mono">3049197860018</td><td class="mono">2208201200</td><td class="num">0,7</td><td class="num">40,0%</td><td>FRA</td><td class="num">133,31</td><td><span class="chip ok">повний</span></td><td><button class="btn sm">Змінити</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ UI ============ -->
+        <section class="screen" id="s-ui">          <p class="lead">Робота починається з вибору товару. Поки товар не обрано, решта полів недоступна — без нього немає ні УКТ ЗЕД, ні ставки, ні режиму оподаткування.</p>
+
+          <div class="cols c-2">
+            <div class="panel">
+              <header>Партія</header>
+              <div class="pad" style="display:grid; gap:12px">
+                <div class="field">
+                  <label for="f-prod">Товар із довідника</label>
+                  <select class="inp" id="f-prod">
+                    <option value="">Оберіть товар…</option>
+                    <option value="100010">Glen Grant 10 YO 0,7L — 100010</option>
+                    <option value="100003">Campari 0,7L — 100003</option>
+                    <option value="435162">Aperol 1L — 435162</option>
+                    <option value="100015">Espolon Blanco 0,75L — 100015</option>
+                    <option value="rts">Aperol RTS 3x0.2L — без коду</option>
+                  </select>
+                </div>
+                <div class="cols c-2" style="gap:12px">
+                  <div class="field"><label for="f-b">Номер партії</label><input class="inp" id="f-b" placeholder="—" disabled></div>
+                  <div class="field"><label for="f-q">Кількість, шт</label><input class="inp" id="f-q" placeholder="—" disabled></div>
+                </div>
+                <div class="cols c-2" style="gap:12px">
+                  <div class="field"><label for="f-d">Дата надходження</label><input class="inp" id="f-d" placeholder="—" disabled></div>
+                  <div class="field"><label for="f-dec">Номер декларації</label><input class="inp" id="f-dec" placeholder="—" disabled></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <header id="ui-head">Дані товару</header>
+
+              <div class="pad" id="ui-empty" style="min-height:300px; display:grid; place-content:center; justify-items:center; text-align:center; gap:9px">
+                <div style="width:38px; height:38px; border-radius:50%; border:1px dashed var(--line); display:grid; place-items:center; color:var(--muted); font-size:16px">▤</div>
+                <div style="font-size:13px; font-weight:600">Оберіть товар, щоб продовжити</div>
+                <p style="margin:0; font-size:12.5px; color:var(--muted); max-width:38ch">УКТ ЗЕД, місткість, міцність, ставка та режим оподаткування підставляться сюди з довідника.</p>
+                <button class="btn sm" data-go="cat" style="margin-top:4px">Відкрити довідник</button>
+              </div>
+
+              <div class="pad" id="ui-filled" style="display:none">
+                <dl class="kv">
+                  <dt>Назва для еАкцизу</dt><dd id="d-name">—</dd>
+                  <dt>Штрихкод</dt><dd class="mono" id="d-bar">—</dd>
+                  <dt>УКТ ЗЕД</dt><dd class="mono" id="d-uktzed">—</dd>
+                  <dt>Місткість</dt><dd id="d-cap">—</dd>
+                  <dt>Міцність</dt><dd id="d-abv">—</dd>
+                  <dt>Країна виробництва</dt><dd id="d-cn">—</dd>
+                  <dt>Ставка податку</dt><dd id="d-rate">—</dd>
+                  <dt>Режим</dt><dd>Оподатковуються акцизним податком</dd>
+                </dl>
+                <div style="margin-top:13px; padding-top:12px; border-top:1px solid var(--line-soft)">
+                  <dl class="kv">
+                    <dt>Економічний оператор</dt><dd class="mono">A001</dd>
+                    <dt>Код об'єкта</dt><dd class="mono">ABC</dd>
+                    <dt>Країна</dt><dd class="mono">UA</dd>
+                  </dl>
+                </div>
+                <div style="margin-top:14px; padding-top:13px; border-top:1px solid var(--line-soft); display:flex; align-items:center; gap:11px; flex-wrap:wrap">
+                  <span id="ui-chip" class="chip ok">12 000 УІ, усі поля заповнені</span>
+                  <span style="margin-left:auto"></span>
+                  <button class="btn go" id="ui-gen">Сформувати файл</button>
+                </div>
+                <div id="ui-out" style="display:none; margin-top:13px">
+                  <div class="outfile">
+                    <div class="tick">✓</div>
+                    <div>
+                      <div class="nm">UI_request_PTU00000001906.xml</div>
+                      <div class="pa">D:\еАкциз\Вихідні\2026-09 · 12 000 записів · схема api.xtrace.gov.ua/v1</div>
+                    </div>
+                    <button class="btn sm" style="margin-left:auto">Відкрити папку</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ UGI ============ -->
+        <section class="screen" id="s-ugi">
+          <div class="drop" style="margin-bottom:14px">
+            <div>
+              <div class="fi">UGI_import_PTU00000001906_25092026.xml</div>
+              <div class="meta">файл від 3PL-складу · 1,4 МБ · 12 402 записи · розібрано 09:15</div>
+            </div>
+            <div class="right"><button class="btn sm">Замінити файл</button></div>
+          </div>
+
+          <div class="cols c-32">
+            <div class="panel">
+              <header>Розібрані записи</header>
+              <div class="pad" style="padding-bottom:0">
+                <div class="tabs">
+                  <button class="on" data-tab>УГІ <span class="chip nt" style="margin-left:6px">1 203</span></button>
+                  <button data-tab>УІ <span class="chip nt" style="margin-left:6px">11 199</span></button>
+                  <button data-tab>Проблемні <span class="chip er" style="margin-left:6px">1</span></button>
+                </div>
+              </div>
+              <div class="tw" style="max-height:330px">
+                <table>
+                  <thead><tr><th>Код УГІ</th><th class="num">Рівень</th><th>Артикул</th><th>УКТ ЗЕД</th><th class="num">Вкладених</th><th>Стан</th></tr></thead>
+                  <tbody>
+                    <tr><td class="mono">A00143ABC13102518M2JkZTY5NT</td><td class="num">4</td><td class="mono">—</td><td class="mono">—</td><td class="num">3</td><td><span class="chip ok">ок</span></td></tr>
+                    <tr><td class="mono">A00133ABC25092518ZjgyNjA0MW</td><td class="num">3</td><td class="mono">—</td><td class="mono">—</td><td class="num">4</td><td><span class="chip ok">ок</span></td></tr>
+                    <tr><td class="mono">A00132ABC25092518OTU2YjBmOG</td><td class="num">3</td><td class="mono">—</td><td class="mono">—</td><td class="num">6</td><td><span class="chip ok">ок</span></td></tr>
+                    <tr><td class="mono">A00131ABC25092518NjU3YTA5MG</td><td class="num">3</td><td class="mono">—</td><td class="mono">—</td><td class="num">2</td><td><span class="chip ok">ок</span></td></tr>
+                    <tr><td class="mono">A00121ABC25092518Y2FkOTA0ND</td><td class="num">2</td><td class="mono">100010</td><td class="mono">2208303000</td><td class="num">3</td><td><span class="chip ok">ок</span></td></tr>
+                    <tr><td class="mono">A00121ABC25092518ZTMyY2IxMj</td><td class="num">2</td><td class="mono">100010</td><td class="mono">2208303000</td><td class="num">3</td><td><span class="chip ok">ок</span></td></tr>
+                    <tr class="bad"><td class="mono">A00121ABC25092518OTU3YzY1N2</td><td class="num">2</td><td class="mono">100010</td><td class="mono">2208303000</td><td class="num">3</td><td><span class="chip er">дублікат УІ</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="pad" style="border-top:1px solid var(--line-soft); background:var(--err-soft); display:flex; gap:9px; align-items:flex-start">
+                <span class="dot er" style="margin-top:5px"></span>
+                <div style="font-size:12.5px">
+                  <b>Дублікат УІ</b>
+                  <div style="color:var(--muted); font-size:12px; margin-top:2px">Код <span class="mono">T25WF17LFEBWA001sEDGMFx8</span> зустрічається у двох групах. Виправити це в застосунку неможливо — склад має сформувати файл заново.</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:grid; gap:14px; align-content:start">
+              <div class="panel">
+                <header>Реквізити операції</header>
+                <div class="pad">
+                  <dl class="kv">
+                    <dt>Економічний оператор</dt><dd class="mono">A001</dd>
+                    <dt>Код об'єкта</dt><dd class="mono">ABC</dd>
+                    <dt>Країна</dt><dd class="mono">UA</dd>
+                    <dt>Прихід</dt><dd class="mono">PTU00000001906</dd>
+                    <dt>Декларація</dt><dd class="mono">25UA209130777558T4</dd>
+                  </dl>
+                  <div style="margin-top:11px"><span class="chip ok">усі обов'язкові заповнені</span></div>
+                </div>
+              </div>
+
+              <button class="btn go" disabled style="width:100%">Сформувати файл імпорту</button>
+              <p style="margin:-6px 0 0; font-size:12px; color:var(--muted)">Поки у файлі є дублікат, імпорт не формується. Завантажте новий файл зі складу.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ EM ACTIVATION ============ -->
+        <section class="screen" id="s-em">
+          <div class="drop" style="margin-bottom:14px">
+            <div>
+              <div class="fi">13.08.2026 Неактивовані ЕМ.csv</div>
+              <div class="meta">експорт із еАкцизу · 9 марок · серія LFX · повідомлення 004-U58I-2026-000018</div>
+            </div>
+            <div class="right">
+              <select class="inp" style="width:auto">
+                <option>Призначити всім: Glen Grant 10 YO 0,7L</option>
+                <option>Призначити всім: Campari 0,7L</option>
+                <option>Призначити всім: Aperol 1L</option>
+              </select>
+              <button class="btn sm go">Застосувати</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <header>Марки до активації <span class="r">9 записів із файлу · усі прив'язані</span></header>
+            <div class="tw" style="max-height:320px">
+              <table>
+                <thead><tr>
+                  <th>Серійний номер</th><th>Унікальний ідентифікатор</th><th>Товар</th><th>Штрихкод</th><th>Країна</th><th>Дата вироб.</th><th>Нанесена</th>
+                </tr></thead>
+                <tbody>
+                  <tr><td class="mono">RF8W9U1DI</td><td class="mono">T25RF8W9U1DIU58I96seS</td><td>Glen Grant 10 YO 0,7L</td><td class="mono">080432402979</td><td>GBR</td><td class="mono">18.12.2025</td><td><span class="chip ok">так</span></td></tr>
+                  <tr><td class="mono">RF8PEYFJ5</td><td class="mono">T25RF8PEYFJ5U58I96seS</td><td>Glen Grant 10 YO 0,7L</td><td class="mono">080432402979</td><td>GBR</td><td class="mono">18.12.2025</td><td><span class="chip ok">так</span></td></tr>
+                  <tr><td class="mono">RF88L5S9G</td><td class="mono">T25RF88L5S9GU58I96seS</td><td>Glen Grant 10 YO 0,7L</td><td class="mono">080432402979</td><td>GBR</td><td class="mono">18.12.2025</td><td><span class="chip ok">так</span></td></tr>
+                  <tr><td class="mono">RF8J4LNC5</td><td class="mono">T25RF8J4LNC5U58I96seS</td><td>Glen Grant 10 YO 0,7L</td><td class="mono">080432402979</td><td>GBR</td><td class="mono">18.12.2025</td><td><span class="chip ok">так</span></td></tr>
+                  <tr class="wrn"><td class="mono">RF8B7RQ0W</td><td class="mono">T25RF8B7RQ0WU58I96seS</td><td>Glen Grant 10 YO 0,7L</td><td class="mono">080432402979</td><td>GBR</td><td class="mono">18.12.2025</td><td><span class="chip wr">ні</span></td></tr>
+                  <tr><td class="mono">RF8Y1WPTO</td><td class="mono">T25RF8Y1WPTOU58I96seS</td><td>Glen Grant 10 YO 0,7L</td><td class="mono">080432402979</td><td>GBR</td><td class="mono">18.12.2025</td><td><span class="chip ok">так</span></td></tr>
+                  <tr><td class="mono">RF83AUZVP</td><td class="mono">T25RF83AUZVPU58I96seS</td><td>Glen Grant 10 YO 0,7L</td><td class="mono">080432402979</td><td>GBR</td><td class="mono">18.12.2025</td><td><span class="chip ok">так</span></td></tr>
+                  <tr><td class="mono">RF8DHQSW8</td><td class="mono">T25RF8DHQSW8U58I96seS</td><td>Glen Grant 10 YO 0,7L</td><td class="mono">080432402979</td><td>GBR</td><td class="mono">18.12.2025</td><td><span class="chip ok">так</span></td></tr>
+                  <tr><td class="mono">RF8TX7MGB</td><td class="mono">T25RF8TX7MGBU58I96seS</td><td>Glen Grant 10 YO 0,7L</td><td class="mono">080432402979</td><td>GBR</td><td class="mono">18.12.2025</td><td><span class="chip ok">так</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="pad" style="border-top:1px solid var(--line-soft); background:var(--warn-soft)">
+              <div style="display:flex; gap:9px; align-items:flex-start; margin-bottom:9px">
+                <span class="dot wr" style="margin-top:5px"></span>
+                <div style="font-size:12.5px">
+                  <b>2 попередження — файл сформується</b>
+                  <div style="color:var(--muted); font-size:12px; margin-top:3px">Марка <span class="mono">RF8B7RQ0W</span> піде з ознакою <span class="mono">isMarked=false</span> — у файлі еАкцизу вона не позначена як нанесена.</div>
+                  <div style="color:var(--muted); font-size:12px; margin-top:2px">Код обладнання не вказано, буде підставлено <span class="mono">00000</span> — ручне виробництво.</div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:11px; flex-wrap:wrap">
+                <span class="chip nt">Формат: XML</span>
+                <span style="margin-left:auto"></span>
+                <button class="btn go" id="em-gen">Сформувати файл активації</button>
+              </div>
+              <div id="em-out" style="display:none; margin-top:12px">
+                <div class="outfile">
+                  <div class="tick">✓</div>
+                  <div>
+                    <div class="nm">EM_activation_20260924_1103.xml</div>
+                    <div class="pa">D:\еАкциз\Вихідні\2026-09 · 9 записів · 2 попередження збережено у звіті</div>
+                  </div>
+                  <button class="btn sm" style="margin-left:auto">Відкрити папку</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ MOVEMENT ============ -->
+        <section class="screen" id="s-move">
+          <p class="lead">Переміщення може містити одночасно неактивовані та активовані електронні марки й УГІ. Система перелічує все, що є у файлі, і формує один файл імпорту.</p>
+
+          <div class="drop" style="margin-bottom:14px">
+            <div>
+              <div class="fi">13.08.2026 Неактивовані ЕМ.csv</div>
+              <div class="meta">експорт із еАкцизу · оприбуткування ввезеного маркованого товару</div>
+            </div>
+            <div class="right"><button class="btn sm">Замінити файл</button></div>
+          </div>
+
+          <div class="panel">
+            <header>
+              У переміщенні
+              <span class="r">8 записів · 6 неактивованих ЕМ, 0 активованих ЕМ, 2 УГІ</span>
+            </header>
+            <div class="pad" style="display:flex; gap:8px; flex-wrap:wrap; padding-bottom:0">
+              <span class="chip nt">Неактивовані ЕМ · 6</span>
+              <span class="chip nt">Активовані ЕМ · 0</span>
+              <span class="chip nt">УГІ · 2</span>
+            </div>
+            <div class="tw" style="max-height:330px; margin-top:13px">
+              <table>
+                <thead><tr><th>Тип</th><th>ID</th><th>Код</th><th>Об'єкт</th><th>Етап</th><th>Нанесена</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="chip nt">ЕМ неактивована</span></td><td class="mono">9be19f01-0e64-497d-80f3-18c972ee8c3f</td><td class="mono">RF8W9U1DI</td><td class="mono">AS4</td><td>На складі</td><td><span class="chip ok">так</span></td></tr>
+                  <tr><td><span class="chip nt">ЕМ неактивована</span></td><td class="mono">9be19f01-0e64-4a76-9364-afabeac39db8</td><td class="mono">RF8PEYFJ5</td><td class="mono">AS4</td><td>На складі</td><td><span class="chip ok">так</span></td></tr>
+                  <tr><td><span class="chip nt">ЕМ неактивована</span></td><td class="mono">9be19f01-0e64-4a78-a86f-dcbe27a0370a</td><td class="mono">RF88L5S9G</td><td class="mono">AS4</td><td>На складі</td><td><span class="chip ok">так</span></td></tr>
+                  <tr><td><span class="chip nt">ЕМ неактивована</span></td><td class="mono">9be19f01-0e64-4a7b-9eb6-87c033912eea</td><td class="mono">RF8J4LNC5</td><td class="mono">AS4</td><td>На складі</td><td><span class="chip ok">так</span></td></tr>
+                  <tr><td><span class="chip nt">ЕМ неактивована</span></td><td class="mono">9be19f01-0e64-4b70-a941-fd949123a956</td><td class="mono">RF8B7RQ0W</td><td class="mono">AS4</td><td>На складі</td><td><span class="chip wr">ні</span></td></tr>
+                  <tr><td><span class="chip nt">ЕМ неактивована</span></td><td class="mono">9be19f01-0e64-4c71-89cf-9221bf55ebe9</td><td class="mono">RF8Y1WPTO</td><td class="mono">AS4</td><td>На складі</td><td><span class="chip ok">так</span></td></tr>
+                  <tr><td><span class="chip nt">УГІ</span></td><td class="mono">00000000-0000-0000-0000-000000000003</td><td class="mono">A00121ABC25092518Y2FkOTA0ND</td><td class="mono">AS4</td><td>На складі</td><td>—</td></tr>
+                  <tr><td><span class="chip nt">УГІ</span></td><td class="mono">00000000-0000-0000-0000-000000000004</td><td class="mono">A00121ABC25092518ZTMyY2IxMj</td><td class="mono">AS4</td><td>На складі</td><td>—</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="pad" style="border-top:1px solid var(--line-soft); display:flex; align-items:center; gap:11px; flex-wrap:wrap">
+              <span class="chip ok">усі записи розібрано</span>
+              <span style="margin-left:auto"></span>
+              <button class="btn go" id="mv-gen">Сформувати файл</button>
+            </div>
+            <div id="mv-out" style="display:none; padding:0 13px 13px">
+              <div class="outfile">
+                <div class="tick">✓</div>
+                <div>
+                  <div class="nm">import_20260924.xml</div>
+                  <div class="pa">D:\еАкциз\Вихідні\2026-09 · 8 записів</div>
+                </div>
+                <button class="btn sm" style="margin-left:auto">Відкрити папку</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ DEACTIVATION ============ -->
+        <section class="screen" id="s-deact">
+          <p class="lead">Для кожного типу формується окремий файл. Оберіть, що деактивуєте — від цього залежить, який експорт із еАкцизу потрібен.</p>
+
+          <div class="rcards" style="margin-bottom:16px">
+            <button class="rcard sel" data-rc data-type="УІ"><b>УІ</b><small>Джерело: експорт активованих УІ</small></button>
+            <button class="rcard" data-rc data-type="УГІ"><b>УГІ</b><small>Джерело: список УГІ</small></button>
+            <button class="rcard" data-rc data-type="ЕМ"><b>ЕМ</b><small>Джерело: експорт активованих ЕМ</small></button>
+          </div>
+
+          <div class="drop" style="margin-bottom:14px">
+            <div>
+              <div class="fi">Активовані УІ_18092026.csv</div>
+              <div class="meta">експорт із еАкцизу · 14 записів · ЕО «КАМПАРІ ЮКРЕЙН» · тип визначено автоматично: <b id="dt-label">УІ</b></div>
+            </div>
+            <div class="right"><button class="btn sm">Замінити файл</button></div>
+          </div>
+
+          <div class="panel">
+            <header>Записи до деактивації <span class="r">14 записів із файлу</span></header>
+            <div class="tw" style="max-height:280px">
+              <table>
+                <thead><tr><th>ID</th><th>Унікальний ідентифікатор</th><th>Серійний номер</th><th>Повідомлення</th><th>Серія</th></tr></thead>
+                <tbody>
+                  <tr><td class="mono">0d619f01-9489-49e7-a811-90e1b3954c11</td><td class="mono">T25LFX27WJ68U58IqjazQ</td><td class="mono">LFX27WJ68</td><td class="mono">004-U58I-2026-000018</td><td>LFX</td></tr>
+                  <tr><td class="mono">0d619f01-9489-45f5-8eea-7b281b5cf8e0</td><td class="mono">T25LFX2DVL1KU58IqjazQ</td><td class="mono">LFX2DVL1K</td><td class="mono">004-U58I-2026-000018</td><td>LFX</td></tr>
+                  <tr><td class="mono">0d619f01-9489-4df6-a472-acb9fc51081b</td><td class="mono">T25LFX2LA3VVU58IqjazQ</td><td class="mono">LFX2LA3VV</td><td class="mono">004-U58I-2026-000018</td><td>LFX</td></tr>
+                  <tr><td class="mono">0d619f01-9489-44bc-b991-dc2a77a9af32</td><td class="mono">T25LFX37GR3VU58IqjazQ</td><td class="mono">LFX37GR3V</td><td class="mono">004-U58I-2026-000018</td><td>LFX</td></tr>
+                  <tr><td class="mono">0d619f01-9489-41a1-b7e0-be99eb9f89f4</td><td class="mono">T25LFX3K511MU58IqjazQ</td><td class="mono">LFX3K511M</td><td class="mono">004-U58I-2026-000018</td><td>LFX</td></tr>
+                  <tr><td class="mono">0d619f01-9489-4464-9ba3-1f0069a3d9a4</td><td class="mono">T25LFX4ALCD0U58IqjazQ</td><td class="mono">LFX4ALCD0</td><td class="mono">004-U58I-2026-000018</td><td>LFX</td></tr>
+                  <tr><td class="mono">0d619f01-9489-4d07-93a1-cc9757cb8723</td><td class="mono">T25LFX4B6BI2U58IqjazQ</td><td class="mono">LFX4B6BI2</td><td class="mono">004-U58I-2026-000018</td><td>LFX</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="pad" style="border-top:1px solid var(--line-soft); background:var(--danger-soft); display:flex; align-items:center; gap:12px; flex-wrap:wrap">
+              <div style="font-size:12.5px">Буде сформовано файл деактивації на <b>14 <span id="dt-label2">УІ</span></b>. Дію не можна скасувати після вивантаження в еАкциз.</div>
+              <button class="btn dgr" id="dc-gen" style="margin-left:auto">Сформувати файл деактивації</button>
+            </div>
+            <div id="dc-out" style="display:none; padding:13px; border-top:1px solid var(--line-soft)">
+              <div class="outfile">
+                <div class="tick">✓</div>
+                <div>
+                  <div class="nm" id="dc-name">UI_deactivation_20260924.xml</div>
+                  <div class="pa">D:\еАкциз\Вихідні\2026-09 · 14 записів</div>
+                </div>
+                <button class="btn sm" style="margin-left:auto">Відкрити папку</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <div class="statusbar">
+        <span>ЕО <span class="mono">A001</span></span>
+        <span>Об'єкт <span class="mono">ABC</span></span>
+        <span>Довідник: <span class="mono">44 позиції, 22.09.2026</span></span>
+        <span class="right">Прототип <span class="mono">1.0</span> · обсяг за WBS</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+(function(){
+  var titles = {
+    cat:['Довідник','Довідник товарів'],
+    ui:['Формування УІ та УГІ','Формування УІ'],
+    ugi:['Формування УІ та УГІ','Внесення УГІ'],
+    em:['Марки','Активація електронних марок'],
+    move:['Марки','Особливі випадки переміщення'],
+    deact:['Списання','Деактивація УІ, УГІ та ЕМ']
+  };
+  var actions = {
+    cat:'<button class="btn">Завантажити файл довідника</button><button class="btn go">Додати товар</button>'
+  };
+
+  var app = document.getElementById('app');
+  var crumb = document.getElementById('crumb');
+  var title = document.getElementById('title');
+  var acts = document.getElementById('acts');
+
+  function go(id){
+    var t = document.getElementById('s-'+id);
+    if(!t) return;
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('on'); });
+    t.classList.add('on');
+    document.querySelectorAll('.side button').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-go')===id);
+    });
+    var h = titles[id] || ['',''];
+    crumb.textContent = h[0]; title.textContent = h[1];
+    acts.innerHTML = actions[id] || '';
+    if(id==='ui'){ var s=document.getElementById('f-prod'); if(s){ s.value=''; } renderUi(); }
+    var v = document.querySelector('.view'); if(v) v.scrollTop = 0;
+  }
+
+  var PRODUCTS = {
+    '100010':{name:'Віскі 10-річної витримки Glen Grant 10 years', bar:'080432402979', uktzed:'2208303000', cap:'0,7 л', abv:'40,0%', cn:'GBR', rate:'133,31'},
+    '100003':{name:'Настоянка гірка CAMPARI, 0,7 л', bar:'8000040001106', uktzed:'2208701000', cap:'0,7 л', abv:'25,0%', cn:'ITA', rate:'133,31'},
+    '435162':{name:'Аперитив APEROL APERITIVO, 1 л', bar:'8002230000012', uktzed:'2208906900', cap:'1,0 л', abv:'11,0%', cn:'ITA', rate:'133,31'},
+    '100015':{name:'Текіла ESPOLON BLANCO', bar:'721059707503', uktzed:'2208905400', cap:'0,75 л', abv:'40,0%', cn:'MEX', rate:'133,31'},
+    'rts':{name:null, bar:null, uktzed:'2208906900', cap:'0,2 л', abv:'9,0%', cn:'ITA', rate:'133,31', missing:['назва для еАкцизу','код товару','штрихкод']}
+  };
+  var BATCH = ['PTU00000001906','12 000','25.09.2026','25UA209130777558T4'];
+  var FIELDS = ['f-b','f-q','f-d','f-dec'];
+
+  function setText(id, v, bad){
+    var el = document.getElementById(id); if(!el) return;
+    el.textContent = (v === null || v === undefined) ? 'не заповнено' : v;
+    el.style.color = bad ? 'var(--err)' : '';
+  }
+
+  function renderUi(){
+    var sel = document.getElementById('f-prod');
+    var empty = document.getElementById('ui-empty');
+    var filled = document.getElementById('ui-filled');
+    var head = document.getElementById('ui-head');
+    var out = document.getElementById('ui-out');
+    if(!sel || !empty || !filled) return;
+    var code = sel.value;
+
+    FIELDS.forEach(function(id,i){
+      var f = document.getElementById(id); if(!f) return;
+      f.disabled = !code; f.value = code ? BATCH[i] : '';
+    });
+    if(out) out.style.display = 'none';
+
+    if(!code){
+      empty.style.display='grid'; filled.style.display='none';
+      head.innerHTML = 'Дані товару';
+      return;
+    }
+
+    var p = PRODUCTS[code];
+    empty.style.display='none'; filled.style.display='block';
+    setText('d-name', p.name, !p.name);
+    setText('d-bar', p.bar, !p.bar);
+    setText('d-uktzed', p.uktzed); setText('d-cap', p.cap);
+    setText('d-abv', p.abv); setText('d-cn', p.cn); setText('d-rate', p.rate);
+
+    var chip = document.getElementById('ui-chip');
+    var gen = document.getElementById('ui-gen');
+    if(p.missing){
+      head.innerHTML = 'Підставлено з довідника <span class="r"><span class="chip er">'+p.missing.length+' поля не заповнено</span></span>';
+      chip.className='chip er'; chip.textContent='Не вистачає: '+p.missing.join(', ');
+      gen.disabled = true;
+    }else{
+      head.innerHTML = 'Підставлено з довідника <span class="r"><span class="chip ok">усі поля знайдено</span></span>';
+      chip.className='chip ok'; chip.textContent='12 000 УІ, усі поля заповнені';
+      gen.disabled = false;
+    }
+  }
+
+  document.addEventListener('click', function(e){
+    var nav = e.target.closest('[data-go]');
+    if(nav){ go(nav.getAttribute('data-go')); return; }
+
+    var rc = e.target.closest('[data-rc]');
+    if(rc){
+      rc.parentElement.querySelectorAll('[data-rc]').forEach(function(x){ x.classList.remove('sel'); });
+      rc.classList.add('sel');
+      var ty = rc.getAttribute('data-type');
+      var l1 = document.getElementById('dt-label'), l2 = document.getElementById('dt-label2');
+      var nm = document.getElementById('dc-name'), o = document.getElementById('dc-out');
+      if(l1) l1.textContent = ty;
+      if(l2) l2.textContent = ty;
+      if(nm) nm.textContent = (ty==='УІ'?'UI':ty==='УГІ'?'UGI':'EM')+'_deactivation_20260924.xml';
+      if(o) o.style.display='none';
+      return;
+    }
+
+    var tab = e.target.closest('[data-tab]');
+    if(tab){
+      tab.parentElement.querySelectorAll('[data-tab]').forEach(function(x){ x.classList.remove('on'); });
+      tab.classList.add('on');
+      return;
+    }
+
+    if(e.target.id==='ui-gen'){ var o1=document.getElementById('ui-out'); if(o1) o1.style.display='block'; return; }
+    if(e.target.id==='em-gen'){ var o2=document.getElementById('em-out'); if(o2) o2.style.display='block'; return; }
+    if(e.target.id==='mv-gen'){ var o3=document.getElementById('mv-out'); if(o3) o3.style.display='block'; return; }
+    if(e.target.id==='dc-gen'){ var o4=document.getElementById('dc-out'); if(o4) o4.style.display='block'; return; }
+  });
+
+  var sel = document.getElementById('f-prod');
+  if(sel) sel.addEventListener('change', renderUi);
+  renderUi();
+
+})();
+</script>
+</body>
+</html>
